@@ -87,9 +87,9 @@ def apply_dvf_to_image(image, dvf, is_mask=False, hu_range=None):
 def generate_random_weights():
     """Generate random weights in specified ranges"""
     w0 = random.uniform(0.95, 1.05)
-    w1 = random.uniform(-1, 1)
-    w2 = random.uniform(-1, 1)
-    w3 = random.uniform(-1, 1)
+    w1 = random.uniform(-1.5, 3.0)
+    w2 = random.uniform(-1.5, 3.0)
+    w3 = random.uniform(-1.5, 1.5)
     return w0, w1, w2, w3
 
 def smooth_dvf_until_valid(dvf, max_iterations=30, sigma=0.5, threshold=0.1, verbose=True):
@@ -174,7 +174,7 @@ def process_patient(patient_id):
         # Get representative DVF for each principal component
         # Option 1: Scale by average projection
         component_dvfs = []
-        scale_std=2.0
+        scale_std=1.0
         for i in range(pca_components):
             dvf = (scale_std* std_principal_components[i]) * principal_dvfs[i] + dvf0
             dvf = dvf.reshape(original_shape)

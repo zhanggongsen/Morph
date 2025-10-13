@@ -474,6 +474,7 @@ def cone_beam_projection(volume, spacing, SAD, SDD,
                          det_rows, det_cols, det_height, det_width,
                          num_samples=2000, chunk_size=1024,
                          angle_deg=0.0):
+    volume = volume * 49.95 + 0.02                         
     volume = volume / 1000
     device = volume.device
     D, H, W = volume.shape[1:]

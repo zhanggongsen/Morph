@@ -90,6 +90,7 @@ class AlignedDataset(BaseDataset):
         I_2_np2 = AB_np1[12, :, :, :]
         I_3_np2 = AB_np1[13, :, :, :]
         J_np2 = AB_np1[14, :, :, :]
+        K_np2 = AB_np1[15, :, :, :]
 
 
         A_np3 = np.tile(A_np2.astype(np.float32), (1, 1, 1, 1))
@@ -106,6 +107,7 @@ class AlignedDataset(BaseDataset):
         I_2_np3 = np.tile(I_2_np2.astype(np.float32), (1, 1, 1, 1))
         I_3_np3 = np.tile(I_3_np2.astype(np.float32), (1, 1, 1, 1))
         J_np3 = np.tile(J_np2.astype(np.float32), (1, 1, 1, 1))
+        K_np3 = np.tile(K_np2.astype(np.float32), (1, 1, 1, 1))
 
         # dataB_gray_high = self.dataB_gray_high
         # dataB_gray_low = self.dataB_gray_low
@@ -140,9 +142,11 @@ class AlignedDataset(BaseDataset):
             torch.float)
         J_tensor = Scale_and_Normalize_toTensor(J_np3, scale=False, normalize=False).to(
             torch.float)
+        K_tensor = Scale_and_Normalize_toTensor(K_np3, scale=False, normalize=False).to(
+            torch.float)
 
-        return {'A': A_tensor, 'B': B_tensor, 'C': C_tensor, 'E_1': E_1_tensor, 'E_2': E_2_tensor, 'E_3': E_3_tensor, 'F': F_tensor, 'I_1': I_1_tensor, 'I_2': I_2_tensor, 'I_3': I_3_tensor,'J': J_tensor,'A_paths': AB_path,
-                'B_paths': AB_path, 'C_paths': AB_path, 'D_paths': AB_path, 'E_1_paths': AB_path,'E_2_paths': AB_path,'E_3_paths': AB_path, 'F_paths': AB_path,'G_paths': AB_path,'I_1_paths': AB_path,'I_2_paths': AB_path,'I_3_paths': AB_path,'J_paths': AB_path}
+        return {'A': A_tensor, 'B': B_tensor, 'C': C_tensor, 'E_1': E_1_tensor, 'E_2': E_2_tensor, 'E_3': E_3_tensor, 'F': F_tensor, 'I_1': I_1_tensor, 'I_2': I_2_tensor, 'I_3': I_3_tensor,'J': J_tensor,'K': K_tensor,'A_paths': AB_path,
+                'B_paths': AB_path, 'C_paths': AB_path, 'D_paths': AB_path, 'E_1_paths': AB_path,'E_2_paths': AB_path,'E_3_paths': AB_path, 'F_paths': AB_path,'G_paths': AB_path,'I_1_paths': AB_path,'I_2_paths': AB_path,'I_3_paths': AB_path,'J_paths': AB_path,'K_paths': AB_path}
 
     def __len__(self):
 

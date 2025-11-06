@@ -41,6 +41,8 @@ class MorphModel(BaseModel):
             parser.add_argument('--lambda_BCEGTV', type=float, default=1, help='weight for BCEGTVLoss loss')
             parser.add_argument('--ifDiceLungLoss', type=int, default=0, help='use DiceLungLoss for Net_G')
             parser.add_argument('--lambda_DiceLung', type=float, default=1, help='weight for DiceLung loss')
+            parser.add_argument('--ifDiceBodyLoss', type=int, default=0, help='use DiceBodyLoss for Net_G')
+            parser.add_argument('--lambda_DiceBody', type=float, default=1, help='weight for DiceBody loss')
 
             parser.add_argument('--ifProjectionLoss', type=int, default=0, help='use ProjectionLoss for Net_G')
             parser.add_argument('--lambda_Projection', type=float, default=1, help='weight for Projection loss')
@@ -82,6 +84,8 @@ class MorphModel(BaseModel):
         self.lambda_BCEGTV = opt.lambda_BCEGTV
         self.ifDiceLungLoss = opt.ifDiceLungLoss
         self.lambda_DiceLung = opt.lambda_DiceLung
+        self.ifDiceBodyLoss = opt.ifDiceBodyLoss
+        self.lambda_DiceBody = opt.lambda_DiceBody
         self.ifDiceGTVLoss = opt.ifDiceGTVLoss
         self.lambda_DiceGTV = opt.lambda_DiceGTV
         self.ifMPDLoss = opt.ifMPDLoss
@@ -115,6 +119,8 @@ class MorphModel(BaseModel):
             self.loss_names.append('G_BCEGTVLoss')
         if self.ifDiceLungLoss == 1:
             self.loss_names.append('G_DiceLungLoss')
+        if self.ifDiceBodyLoss == 1:
+            self.loss_names.append('G_DiceBodyLoss')
         if self.ifDiceGTVLoss == 1:
             self.loss_names.append('G_DiceGTVLoss')
         if self.ifProjectionLoss == 1:
@@ -180,6 +186,7 @@ class MorphModel(BaseModel):
         self.real_I_2 = input['I_2'].to(self.device)
         self.real_I_3 = input['I_3'].to(self.device)
         self.real_J = input['J'].to(self.device)
+        self.real_K = input['K'].to(self.device)
         self.image_paths = input['A_paths']
 
     def forward(self):
@@ -277,13 +284,13 @@ class MorphModel(BaseModel):
         else:
             self.loss_G_DiceLungLoss = 0
 
-        if (self.ifGAN == 1):
-            fake_AB = torch.cat((self.real_A, self.fake_B), 1)
-            pred_fake = self.netD(fake_AB)
-            self.loss_G_GAN = self.criterionGAN(pred_fake, True)
-            self.loss_G = self.loss_G_GAN + self.loss_G_L1Loss * self.lambda_L1 + self.loss_G_MSELoss * self.lambda_MSE + self.loss_G_SSIMCTLoss * self.lambda_SSIMCT + self.loss_G_GDLoss * self.lambda_GD + self.loss_G_BCELoss * self.lambda_BCE + self.loss_G_DiceLoss * self.lambda_Dice
+        if self.ifDiceBodyLoss == 1:
+            self.fake_K = warp_volume(self.real_K, self.fake_E_scale, self.spacing)
+            self.loss_G_DiceBodyLoss = self.DiceLoss(self.fake_K, self.real_B)
         else:
-            self.loss_G = self.loss_G_L1Loss * self.lambda_L1 + self.loss_G_MSELoss * self.lambda_MSE + self.loss_G_JacobianLoss * self.lambda_Jacobian+ self.loss_G_SmoothGDLoss * self.lambda_SmoothGD+ self.loss_G_SmoothBELoss * self.lambda_SmoothBE + self.loss_G_MSECTLoss * self.lambda_MSECT+ self.loss_G_SSIMCTLoss * self.lambda_SSIMCT + self.loss_G_SSIMDVFLoss * self.lambda_SSIMDVF + self.loss_G_GDLoss * self.lambda_GD + self.loss_G_BCELungLoss * self.lambda_BCELung+ self.loss_G_DiceLungLoss * self.lambda_DiceLung+ self.loss_G_ProjectionLoss * self.lambda_Projection
+            self.loss_G_DiceBodyLoss = 0
+
+        self.loss_G = self.loss_G_L1Loss * self.lambda_L1 + self.loss_G_MSELoss * self.lambda_MSE + self.loss_G_JacobianLoss * self.lambda_Jacobian+ self.loss_G_SmoothGDLoss * self.lambda_SmoothGD+ self.loss_G_SmoothBELoss * self.lambda_SmoothBE + self.loss_G_MSECTLoss * self.lambda_MSECT+ self.loss_G_SSIMCTLoss * self.lambda_SSIMCT + self.loss_G_SSIMDVFLoss * self.lambda_SSIMDVF + self.loss_G_GDLoss * self.lambda_GD + self.loss_G_BCELungLoss * self.lambda_BCELung+ self.loss_G_DiceLungLoss * self.lambda_DiceLung+ self.loss_G_DiceBodyLoss * self.lambda_DiceBody+ self.loss_G_ProjectionLoss * self.lambda_Projection
         self.loss_G.backward()
 
     def optimize_parameters(self):

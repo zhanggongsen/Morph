@@ -273,7 +273,7 @@ class MorphModel(BaseModel):
 
         if self.ifBCELungLoss == 1:
             self.BCELungLL = nn.BCELoss()
-            self.fake_G = warp_volume(self.real_D, self.fake_E_scale, self.spacing, if_lable=True)
+            self.fake_G = warp_volume(self.real_D, self.fake_E_scale, self.spacing)
             self.loss_G_BCELungLoss = self.BCELungLL(self.fake_G, self.real_G)
         else:
             self.loss_G_BCELungLoss = 0
@@ -381,7 +381,7 @@ class JacobianDeterminantLoss(nn.Module):
         return penalty.mean()
 
 
-def warp_volume(ct_prior, dvf_mm, spacing,if_lable=True):
+def warp_volume(ct_prior, dvf_mm, spacing,if_lable=False):
     B, _, D, H, W = dvf_mm.shape
     device = dvf_mm.device
 

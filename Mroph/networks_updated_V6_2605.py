@@ -321,8 +321,6 @@ class Decoder(nn.Module):
         self.attention_form = attention_form
         self.upsample = upsample
 
-        # MorphNet description uses trilinear up-sampling followed by a GCR-style projection.
-        # Project decoder features to out_channels before fusing with the encoder skip.
         self.upsampling1 = nn.Upsample(scale_factor=2, mode='trilinear', align_corners=False)
         self.Conv_for_upsampling1 = SingleConv(in_channels, out_channels, kernel_size=conv_kernel_size,
                                                order=conv_layer_order, num_groups=num_groups, padding=padding)
@@ -351,8 +349,6 @@ class Decoder(nn.Module):
                                          padding=padding)
 
     def forward(self, encoder_features, x):
-        # Use the skip tensor as the spatial reference. This is safer than relying on
-        # scale_factor alone when odd/even dimensions or anisotropic pre-processing are used.
         if self.upsample:
             x = F.interpolate(x, size=encoder_features.shape[2:], mode='trilinear', align_corners=False)
         x = self.Conv_for_upsampling1(x.contiguous())
@@ -624,7 +620,6 @@ class Abstract3DUNet(nn.Module):
         self.cbam_encoder_3 = CBAM_Attention_block(128, reduction=16, spatial_kernel=7)
         self.cbam_encoder_4 = CBAM_Attention_block(f_maps[3], reduction=16, spatial_kernel=7)
 
-        # Fuse multi-branch skip tensors so the decoder receives the channel sizes it expects:
         self.skip_fusion_main = nn.ModuleList([
             _make_fusion_block(64 + 64 + f_maps[2], 64, layer_order, num_groups),
             _make_fusion_block(32 + 64 + f_maps[1], 32, layer_order, num_groups),
@@ -644,8 +639,7 @@ class Abstract3DUNet(nn.Module):
                                           layer_order, num_groups, upsample=True,
                                           attention=attention, attention_form=attention_form)
 
-        # Direction-specific heads. For DVF regression the default is linear output;
-        # pass final_activation='sigmoid' only if the labels have been normalized accordingly.
+        # Direction-specific heads.
         self.final_conv = nn.Conv3d(f_maps[0], out_channels, 1)
         if final_activation is None or final_activation == 'none':
             self.final_activation = None

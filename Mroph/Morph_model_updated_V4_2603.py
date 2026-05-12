@@ -1,6 +1,6 @@
 import torch
 from .base_model import BaseModel
-from . import networks
+from . import networks_updated
 import torch.nn as nn
 from torch.autograd import Variable
 from monai.losses import SSIMLoss
